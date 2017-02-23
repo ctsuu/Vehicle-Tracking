@@ -1,2 +1,2 @@
-# Vehicle-Tracking
-Udacity Self-Driving Car Engineer Class Project, due on Feb 20th, 2017
+# Vehicle-Detection-Tracking
+Udacity Self-Driving Car Engineer Class Project, due on Feb 27th, 2017
