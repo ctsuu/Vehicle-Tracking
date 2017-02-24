@@ -464,17 +464,53 @@ Here's an example result showing the heatmap with labels from a test image, the 
 
 Vehicle detection should be happened in realy time. I think the ideal frame rate should be 20-30 fps. On the slow side, I may accepte 2-10 fps. Accuracy is very important too. I targeted the accuracy to be half car. The bonding box should not drop a half car. Missing detection and False positive detection both are bad, I targeted no missing detection in 10 frames, or give 0.5 second, and no false positive above driveable surface. Precision, consisent is always pair with accuracy, I expect the bonding box fit to the car with in 32 pixels. In this project, up coming traffic and left side traffic is not count, but my code can detect them as well. I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.
 
-| Technique | Speed | Accuracy | Precision | Missing | False Positive | Filter | Comments |
+| Technique | Pred Speed | Accuracy | Precision | Training Time | False Positive | Filter | Comments |
 |----------:|:-----:|:--------:|:---------:|:-------:|:--------------:|:------:|:--------:|
-| HOG-All   | 2 fps | 93.91%   | half car  |         |                |        |need scale the input|
-| RGB-HOG-0 | 2 fps | 97.50%   | half car  |         |                |        |need scale the input|
-| YUV-HOG-0 | 2 fps | 98.00%   | half car  |         |                |        |need scale the input|
-| YUV-HOG-All| 2 fps | 99.00%   | half car  |         |                |        |need scale the input|
-| YCrCb-HOG-All | 2 fps | 99.03%   | half car  |         |                |        |need scale the input|
-| Neural Network| 2 fps | ~94.00%   | half car  |         | trees, skyline  |heatmap    |Multi thread |
-| Slide Window SVC  | 2 fps |  99.00%  | half car  |         |                |heatmap, overlapping |single thread |
-| Random slide Window SVC | 6 fps |99.00%   | flicking  | relay to n_windows | reduced |heatmap, overlapping |single thread |
+| HOG-All   | 100 fps | 93.91%   | half car  |  12s    |   n/a      |single frame |1764 features|
+| RGB-HOG-0 | 100 fps | 97.50%   | half car  |   25s      |   n/a          |single frame |4000~ features|
+| YUV-HOG-0 | 100 fps | 98.00%   | half car  |   25s      |   n/a          |single frame |4000~ features|
+| YUV-HOG-All| 100 fps | 99.00%   | half car  |    38s     |   n/a         |single frame |9312 features|
+| YCrCb-HOG-All | 100 fps | 99.03%   | half car  | 38s     |    n/a         |single frame |9312 features|
+| Neural Network| 2-3 fps | ~94.00%   | half car  | 30 mins CPU  | trees, skyline  |heatmap    |Multi thread CPU |
+| Slide Window SVC  | 1.5 fps |  99.00%  | half car  |         |                |heatmap, overlapping |single thread |
+| Random slide Window SVC | 5.2 fps |99.00% | flicking | based on n_windows | reduced |heatmap, overlapping |single thread |
 | Single Frame SVC | 30+ fps | 99.00%   | half car  | n/a | n/a          |        |need scale the input|
+
+From the above table we can see, increaing the complexity of the HOG featureing, it take longer to extract the features and train the classicifer, but not necessary increase the single frame predict time. This is good. I think the bottle-neck is the slide windows approach. 
+
+I would like to talk about the Neural Network a little bit. I expect the network should be fast, at least 15fps, but with this cpu only setting,I get around 2-3 fps. The Neural Network in this project is different than the steering network or the traffic sign network. It has a big 128x128 filter in the middle to detect location, it accomplished sliding window and detection in one shot, but with higher resources. It took all of my 12 cpu core together, all run at ~60% capacity. The improvement can be easy, if have GPU setup, all the heavy lifting search and convolution task move to GPU, can free up lot of resources. 
+
+The good thing for the Neural Network is easy to setup and training. Once you have enough data, the vehicle and not-vehicle images and labels, you can start train the network. You don't really need trick any nobe, the network will figure out a vehicle, part of the vehicle and the car location in the image. The intesting thing is it will pickup the tail lights, signs, traffic light, tree top and skyline as a vehicle. The above head objects are easy to remove, but head/tail lights is hard to deal with. They may belong to one car or two cars. If the vehicle is in close range, the head/tail lights will show up in two blobs, but I don't want to mark them as two cars. I am thinking to add licences plate, gate braking light closeup image into vehicle dataset. So I have another object find in between the two lights, the car would not run into it. 
+
+Also, it is possible to collect different object groups, such as people, lane marker, tree, post, sign, traffic lights, building etc, and train the network all together. That will be the future project for me. 
+
+As mobileye speaker mentioned in a conference, we have to consider all requirement of speed, accuracy, consistent and cost all together. Otherwise, we will have unreasonable demand for individual components. 
+
+Can we increase the computing power to increase speed? Yes, the computing power will be doubling in 18 months. But what can I do with existing computer? I did some research by the following steps:
+* Find the bottle-neck
+* Need analysis
+* Optimize the program
+
+I believe the bottleneck is the traditional sliding window approach. It is similar to convolution filter in the Neural Network. It only utilize one CPU core, so we have to wait until it finish. Do we really need search all the areas for vehicles? Can randomly select windows enough to cover all areas?    
+
+The needs break down to two parts: 
+* not vehicle found 
+* found and tracking vehicle
+
+Before the program find any vehicle, the program need fully open the eye, search as much area as possible to find vehicle.
+This is the most cost expensive stage, my program will run at 2 fps until it found at lease one vehicle. Therefore, randomly select windows can't help much. But planned narrow search region can help. 
+
+Keep tracking a vehicle is much easier. With high accurcy SVC classifier, we can check is this a vehicle, yes, mark the car, very fast; no, do a full search. For the current setting and provided dataset, it seems work well. The car is running within the bounding box, if it come out too much, search and track again. This approach also give the search function a break. 
+The frame rate can jump up from 2 fps to 15-30+ fps depends on the overhead and preprocessing. 
+
+Now the question back to what is the threshold for the tracking, is half car is a car or not a car?
+Based on individual requirement, if I put half car in the `is a car` dataset, the tracking system may following it and do everything as expected, but the bounding box may off the car. If I put half car in the `not a car`dataset, the tracking system may jump out of the tracking action earier and call for full search again. The frame rate may drop a bit, but the bounding box will be more consistent. We should find the balance in between.
+
+
+
+There are many areas can be improved. Use existing built functions can be a big improvement, it may utilize the resource better, and save lot of time to build your own. 
+
+
 
 
 
