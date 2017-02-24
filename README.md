@@ -190,7 +190,7 @@ I tried various combinations of parameters and here is a table shows the using t
 | 0   |     | 9 | 8 | 2 | 0   | 0.9391 |
 | 1   | RGB | 9 | 8 | 2 | 0   | 0.9750 |
 | 2   | YUV | 9 | 8 | 2 | 0   | 0.9800   |
-| 3   | YUV | 8 | 7 | 2 | All | 0.9904   |
+| 3   | YUV | 8 | 7 | 2 | All | 0.9900  |
 | 4   | YCrCb | 8 | 7 | 2 | All | 0.9903 |
 
 I choose the option 4 use 'YCrCb' color histogram, and `orientations=8`, `pixels_per_cell=(7, 7)` and `cells_per_block=(2, 2)` and 'All' hog channels simply because it yields highest accuracies 99.03%, which is much higher than simple Nerual Network can achive. 
@@ -465,12 +465,19 @@ Here's an example result showing the heatmap with labels from a test image, the 
 Vehicle detection should be happened in realy time. I think the ideal frame rate should be 20-30 fps. On the slow side, I may accepte 2-10 fps. Accuracy is very important too. I targeted the accuracy to be half car. The bonding box should not drop a half car. Missing detection and False positive detection both are bad, I targeted no missing detection in 10 frames, or give 0.5 second, and no false positive above driveable surface. Precision, consisent is always pair with accuracy, I expect the bonding box fit to the car with in 32 pixels. In this project, up coming traffic and left side traffic is not count, but my code can detect them as well. I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.
 
 | Technique | Speed | Accuracy | Precision | Missing | False Positive | Filter | Comments |
-|:---------:|:-----:|:--------:|:---------:|:-------:|:--------------:|:------:|:--------:|
-| HOG-All   | 2 fps | 99%      | half car  |         |                |        |need scale the input|
-| 1   | RGB | 9 | 8 | 2 | 0   | 0.9750 |
-| 2   | YUV | 9 | 8 | 2 | 0   | 0.9800   |
-| 3   | YUV | 8 | 7 | 2 | All | 0.9904   |
-| 4   | YCrCb | 8 | 7 | 2 | All | 0.9903 |
+|----------:|:-----:|:--------:|:---------:|:-------:|:--------------:|:------:|:--------:|
+| HOG-All   | 2 fps | 93.91%   | half car  |         |                |        |need scale the input|
+| RGB-HOG-0 | 2 fps | 97.50%   | half car  |         |                |        |need scale the input|
+| YUV-HOG-0 | 2 fps | 98.00%   | half car  |         |                |        |need scale the input|
+| YUV-HOG-All| 2 fps | 99.00%   | half car  |         |                |        |need scale the input|
+| YCrCb-HOG-All | 2 fps | 99.03%   | half car  |         |                |        |need scale the input|
+| Neural Network| 2 fps | ~94.00%   | half car  |         | trees, skyline  |heatmap    |Multi thread |
+| Slide Window SVC  | 2 fps |  99.00%  | half car  |         |                |heatmap, overlapping |single thread |
+| Random slide Window SVC | 6 fps |99.00%   | flicking  | relay to n_windows | reduced |heatmap, overlapping |single thread |
+| Single Frame SVC | 30+ fps | 99.00%   | half car  | n/a | n/a          |        |need scale the input|
+
+
+
 
 
 ### Credit to 
