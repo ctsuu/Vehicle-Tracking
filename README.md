@@ -187,6 +187,7 @@ I tried various combinations of parameters and here is a table shows the using t
 
 | Option | Color Space | Orientations | Pixels_per_cell | Cells_per_block | HOG channel | Accuracy |
 |:-----:|:-------:|:-------:|:-------:|:-------:|:-------:|--------:|--------:|
+| 0   |     | 9 | 8 | 2 | 0   | 0.9391 |
 | 1   | RGB | 9 | 8 | 2 | 0   | 0.9750 |
 | 2   | YUV | 9 | 8 | 2 | 0   | 0.9800   |
 | 3   | YUV | 8 | 7 | 2 | All | 0.9904   |
@@ -461,7 +462,16 @@ Here's an example result showing the heatmap with labels from a test image, the 
 
 ####1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+Vehicle detection should be happened in realy time. I think the ideal frame rate should be 20-30 fps. On the slow side, I may accepte 2-10 fps. Accuracy is very important too. I targeted the accuracy to be half car. The bonding box should not drop a half car. Missing detection and False positive detection both are bad, I targeted no missing detection in 10 frames, or give 0.5 second, and no false positive above driveable surface. Precision, consisent is always pair with accuracy, I expect the bonding box fit to the car with in 32 pixels. In this project, up coming traffic and left side traffic is not count, but my code can detect them as well. I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.
+
+| Technique | Speed | Accuracy | Precision | Missing | False Positive | Filter | Comments |
+|:---------:|:-----:|:--------:|:---------:|:-------:|:--------------:|:------:|:--------:|
+| HOG-All   | 2 fps | 99%      | half car  |         |                |        |need scale the input|
+| 1   | RGB | 9 | 8 | 2 | 0   | 0.9750 |
+| 2   | YUV | 9 | 8 | 2 | 0   | 0.9800   |
+| 3   | YUV | 8 | 7 | 2 | All | 0.9904   |
+| 4   | YCrCb | 8 | 7 | 2 | All | 0.9903 |
+
 
 ### Credit to 
 https://github.com/matthewzimmer/CarND-Vehicle-Detection-P5/blob/master/final-project.ipynb
