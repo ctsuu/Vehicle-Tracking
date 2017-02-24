@@ -45,16 +45,53 @@ First of all, I break down the project into small sections, and each section is 
 
 ### Calibarate the Camera
 Since this project is the following project after project 4, and it is not focus on this task, so I just carry over the method and files from project 4. I resized the video frame from 1280x720 to 720x405. I hope can increase some process speed. Also, the calibarate matrix and resolution has to match.  
+```
+# Reload the camera calibration matrix and distortion conefficients 
+scale = 720/1280 # Scale the 1280 image down to 720 image
+nx = 9 # the number of inside corners in x
+ny = 6 # the number of inside corners in y
+
+# These are the arrays you calculated using cv2.calibrateCamera()
+dist_pickle = pickle.load( open( "camera_cal/720x540_cal_pickle.p", "rb" ) )
+mtx = dist_pickle["mtx"]
+dist = dist_pickle["dist"]
+```
+The calibration matrix and distortion comefficient are reloaded from pickle file. 
+I builded a class process that include the openCV cv2.undistort as a function. 
+```
+def undist(self):
+        self.undist = cv2.undistort(self.resize(), self.mtx, self.dist, None, self.mtx)
+        return self.undist
+```
 <p align="center">
- <img src="./output_images/black_car_YCrCb_hist_features.png" width="720">
+ <img src="./output_images/camera_calibrication.png" width="720">
 </p>
 
 ###Histogram of Oriented Gradients (HOG)
 
 ####1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
-The code for this step is contained in the first code cell of the IPython notebook (or in lines # through # of the file called `some_file.py`).  
+The code in the Jupyter notebook `Building_classifier.ipynb` will follow the order of this writeup. I will explain each code cell and the results.   
 
+First, I read in a test image, cutout the black car and the white car. Then apply
+```
+# Read in test image
+image = mpimg.imread('./test_images/test1.jpg')
+cutout = image[400:500, 810:950]    # Black Car 
+#cutout = image[400:510, 1050:1270]   # White Car
+
+bins_range = (0,255)
+red= cutout[:,:,0]
+rhist = np.histogram(red, bins = 32, range=bins_range, normed = False )
+bin_edges = rhist[1]
+bin_centers = (bin_edges[1:]  + bin_edges[0:len(bin_edges)-1])/2
+```
+<p align="center">
+ <img src="./output_images/black_car_color_hist.png" width="720">
+</p>
+<p align="center">
+ <img src="./output_images/white_car_color_hist.png" width="720">
+</p>
 I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
 ![alt text][image1]
