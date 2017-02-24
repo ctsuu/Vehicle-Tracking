@@ -92,6 +92,35 @@ bin_centers = (bin_edges[1:]  + bin_edges[0:len(bin_edges)-1])/2
 <p align="center">
  <img src="./output_images/white_car_color_hist.png" width="720">
 </p>
+We can see the two histograms from white car and black car appear totally different, therefore, these are good features to recognize these two different color of cars. 
+
+I then explored different color spaces by following Udacity lessens code:
+```
+# apply color conversion if other than 'RGB'
+        if cspace != 'RGB':
+            if cspace == 'HSV':
+                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+            elif cspace == 'LUV':
+                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2LUV)
+            elif cspace == 'HLS':
+                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+            elif cspace == 'YUV':
+                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
+            elif cspace == 'YCrCb':
+                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
+```
+<p align="center">
+ <img src="./output_images/white_car_3d_color_h_space.png" width="720">
+</p>
+The 3d plot may not show some meaningful information, but the following YCrCb color space histograms will be good enough to separe car or not car. This code does not include the HOG feature yet. 
+
+<p align="center">
+ <img src="./output_images/black_car_YCrCb_hist_features.png" width="720">
+</p>
+<p align="center">
+ <img src="./output_images/not_car_YCrCb_hist_features.png" width="720">
+</p>
+
 I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
 ![alt text][image1]
