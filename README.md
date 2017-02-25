@@ -14,15 +14,7 @@ In this project, the goal is to write a software pipeline to detect vehicles in 
 * Run your pipeline on a video stream (start with the test_video.mp4 and later implement on full project_video.mp4) and create a heat map of recurring detections frame by frame to reject outliers and follow detected vehicles.
 * Estimate a bounding box for vehicles detected.
 
-[//]: # (Image References)
-[image1]: ./examples/car_not_car.png
-[image2]: ./examples/HOG_example.jpg
-[image3]: ./examples/sliding_windows.jpg
-[image4]: ./examples/sliding_window.jpg
-[image5]: ./examples/bboxes_and_heat.png
-[image6]: ./examples/labels_map.png
-[image7]: ./examples/output_bboxes.png
-[video1]: ./project_video.mp4
+
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/513/view) Points
 ###Here I will consider the rubric points individually and describe how I addressed each point in my implementation.  
@@ -314,7 +306,16 @@ print('Test score:', score[0])
 print('Test accuracy:', score[1])
 model.save_weights("localize.h5")
 ```
-* Check the Prediction and Search
+* Check the test accuracy
+```
+Epoch 19/20
+15984/15984 [==============================] - 58s - loss: 0.0271 - acc: 0.9810 - val_loss: 0.0198 - val_acc: 0.9870
+Epoch 20/20
+15984/15984 [==============================] - 58s - loss: 0.0252 - acc: 0.9827 - val_loss: 0.0213 - val_acc: 0.9859
+Test score: 0.0212628707615
+Test accuracy: 0.985923423423
+```
+* Prediction Model
 ```
 heatmodel = get_conv(input_shape=(None,None,3), filename="localize.h5")
 ```
@@ -468,7 +469,7 @@ Vehicle detection should be happened in realy time. I think the ideal frame rate
 | YUV-HOG-0 | 100 fps | 98.00%   | half car  |   25s      |   n/a          |single frame |4000~ features|
 | YUV-HOG-All| 100 fps | 99.00%   | half car  |    38s     |   n/a         |single frame |9312 features|
 | YCrCb-HOG-All | 100 fps | 99.03%   | half car  | 38s     |    n/a         |single frame |9312 features|
-| Neural Network| 2-3 fps | ~94.00%   | half car  | 30 mins CPU  | trees, skyline  |heatmap    |Multi thread CPU |
+| Neural Network| 2-3 fps | 98.59%   | half car  | 20 mins CPU  | trees, skyline  |heatmap    |Multi thread CPU |
 | Slide Window SVC  | 1.5 fps |  99.00%  | half car  |         |                |heatmap, overlapping |single thread |
 | Random slide Window SVC | 5.2 fps |99.00% | flicking | based on n_windows | reduced |heatmap, overlapping |single thread |
 | Single Frame SVC | 30+ fps | 99.00%   | half car  | n/a | n/a          |        |need scale the input|
