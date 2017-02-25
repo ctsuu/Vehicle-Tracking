@@ -277,7 +277,7 @@ print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
 # Check the prediction time for a single sample
 t=time.time()
 ```
-I also built and trained a simple Nerual Network in Keras:
+I also built and trained a simple Nerual Network in Keras: Credit to https://github.com/HTuennermann/Vehicle-Detection-and-Tracking/blob/master/LocalizationModel.ipynb.
 The data preparation is same as above. 
 * Start with a Nerual Network model
 ```
@@ -484,6 +484,24 @@ This is the most cost expensive stage, my program will run at 2 fps until it fou
 
 Keep tracking a vehicle is much easier. With high accurcy SVC classifier, we can check is this a vehicle, yes, mark the car, very fast; no, do a full search. For the current setting and provided dataset, it seems work well. The car is running within the bounding box, if it come out too much, search and track again. This approach also give the search function a break. 
 The frame rate can jump up from 2 fps to 15-30+ fps depends on the overhead and preprocessing. 
+
+Compare to the Single Shot MultiBox Detector(SSD) method and You only look once (YOLO) method, both of them are claimed fast method at 20+ fps, they are working on 512x512 or 448x448 input images, my method is working on 1280x720 input images. If implement on GPU, it could be much faster. 
+
+My bounding box size is based on Udacity lesson method: finding the maxium area of the heatmap. More overlapped window, tighter the box fit. Less overlapped window, yield loss fit box. 
+```
+# Iterate through all detected cars
+    for car_number in range(1, labels[1]+1):
+        # Find pixels with each car_number label value
+        nonzero = (labels[0] == car_number).nonzero()
+        # Identify x and y values of those pixels
+        nonzeroy = np.array(nonzero[0])
+        nonzerox = np.array(nonzero[1])
+        # Define a bounding box based on min/max x and y
+        bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
+        # Draw the box on the image
+        cv2.rectangle(img, bbox[0], bbox[1], (255,255,255), 4)
+```
+
 
 ###Discussion
 
