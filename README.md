@@ -24,7 +24,8 @@ In this project, the goal is to write a software pipeline to detect vehicles in 
 
 ####1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Vehicle-Detection/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
 
-First of all, I break down the project into small sections, and each section is independent, we can deep dive into it later, but it also follow the process flow:
+First of all, I break down the project into small sections, and each section is independent, all project ccde is in `Vehicle_detection_submission.ipynb`. We can deep dive into it next, I will highlight the key code that is special in this project, it follows the listed process flow:
+
 * Calibarate the Camera
 * Experience the behivours of each technique
 * Combin some techniques together
@@ -35,7 +36,7 @@ First of all, I break down the project into small sections, and each section is 
 * Markup the bounding box
 * Pipeline process for the video
 
-### Calibarate the Camera
+### Calibarate the Camera (cell 2)
 Since this project is the following project after project 4, and it is not focus on this task, so I just carry over the method and files from project 4. I resized the video frame from 1280x720 to 720x405. I hope can increase some process speed. Also, the calibarate matrix and resolution has to match.  
 ```
 # Reload the camera calibration matrix and distortion conefficients 
@@ -63,7 +64,7 @@ def undist(self):
 
 ####1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
-The code in the Jupyter notebook `Building_classifier.ipynb` will follow the order of this writeup. I will explain each code cell and the results.   
+The code in cell 9 , 10, and 11 of Jupyter notebook are about get_hog_features, combine HOG with color space feature and extract group HOG features, spatial feature, color histogram feature all together. 
 
 First, I read in a test image, cutout the black car and the white car. Then apply
 ```
@@ -133,8 +134,7 @@ Another importent trick is normalize the features. As above pictures shown, the 
     # Apply the scaler to X
     scaled_X = X_scaler.transform(X)
 ```
-
-I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`). HOG feature is an expensive function. It tooks:
+Cell 13, I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`). HOG feature is an expensive function. It tooks:
 ```
 37.76 Seconds to extract HOG features...
 Using: 9 orientations 8 pixels per cell and 2 cells per block
@@ -145,7 +145,7 @@ My SVC predicts:  [ 1.  0.  0.  0.  1.  1.  1.  0.  1.  0.]
 For these 10 labels:  [ 1.  0.  0.  0.  1.  1.  1.  0.  1.  0.]
 0.00405 Seconds to predict 10 labels with SVC
 ```
-For the given dataset, 8000+ cars images and 8000+ notcar images, the accuracy can reach 93.91%. I am looking for higher accuracy. So how about add all color histograms and HOG feature together. 
+For the given dataset, 8000+ cars images and 8000+ notcar images, the HOG only classifier accuracy can reach 93.91%. I am looking for higher accuracy. So how about add all color histograms and HOG feature together. In cell 13: 
 ```
 spatial_features = bin_spatial(feature_image, size=spatial_size)
 file_features.append(spatial_features)
@@ -174,7 +174,7 @@ For these 10 labels:  [ 0.  1.  0.  1.  0.  0.  0.  1.  0.  0.]
 ```
 
 ####2. Explain how you settled on your final choice of HOG parameters.
-
+Cell 13:
 I tried various combinations of parameters and here is a table shows the using the different color space and HOG parameters of `orientations=8`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)` and  `hog_channel = 0, 1,2,All` and accuracies:
 
 | Option | Color Space | Orientations | Pixels_per_cell | Cells_per_block | HOG channel | Accuracy |
@@ -189,7 +189,7 @@ I choose the option 4 use 'YCrCb' color histogram, and `orientations=8`, `pixels
 
 ####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-I trained a linear SVM using Udacity provided Vehicle and not-Vehicle dataset. I also make a class Params(): to store all feature settings.  
+I trained a linear SVM using Udacity provided Vehicle and not-Vehicle dataset. I also make a class Params(): to store all feature settings. Cell 7:
 ```
 class Params():
     def __init__(
@@ -216,7 +216,7 @@ class Params():
         self.hist_feat = hist_feat # Histogram features on or off
         self.hog_feat = hog_feat  # HOG features on or off
 ```
-The training process includes: 
+Cell 13, the training process includes: 
 * Extract both Vehicle and Not_Vehicle dataset with lables
 
 ```
@@ -269,8 +269,10 @@ print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
 # Check the prediction time for a single sample
 t=time.time()
 ```
-I also built and trained a simple Nerual Network in Keras: Credit to https://github.com/HTuennermann/Vehicle-Detection-and-Tracking/blob/master/LocalizationModel.ipynb.
-* Data preparation
+Cell 31 - 42, I also built and trained a simple Nerual Network in Keras: 
+Credit to https://github.com/HTuennermann/Vehicle-Detection-and-Tracking/blob/master/LocalizationModel.ipynb.
+
+* Data preparation Cell 31- 39
 ```
 # Read in car and notcar images again
 cars = glob.glob('./vehicles/*/*.png')
@@ -289,7 +291,7 @@ for fname in notcars:
 Xnn = np.array(Xnn)
 ```
 Notice `scipy.misc.imread()`will works with next training, but mpimg.imread() will not work with next training.  
-* 90/10 split the training set and test set
+* 90/10 split the training set and test set, cell 39:
 ```
 Xnn_train, Xnn_test, Ynn_train, Ynn_test = train_test_split(Xnn, Ynn, test_size=0.10, random_state=42)
 
@@ -303,7 +305,7 @@ Xnn_train shape: (15984, 64, 64, 3)
 15984 train samples
 1776 test samples
 ```
-* Nerual Network model
+* Nerual Network model, cell 40:
 ```
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten,Lambda
@@ -330,7 +332,7 @@ model = get_conv()
 model.add(Flatten())
 model.compile(loss='mse',optimizer='adadelta',metrics=['accuracy'])
 ```
-* Train the Neural Network, and save the weights for futher use
+* Train the Neural Network, and save the weights for futher use, cell 41
 ```
 model.fit(X_train, Y_train, batch_size=128, nb_epoch=20, verbose=1, validation_data=(X_test, Y_test))
 score = model.evaluate(X_test, Y_test, verbose=0)
@@ -345,12 +347,12 @@ Epoch 20/20
 Test score: 0.020839428846
 Test accuracy: 0.989301801802
 ```
-* Prediction Model
+* Prediction Model, cell 42:
 ```
 heatmodel = get_conv(input_shape=(None,None,3), filename="localize.h5")
 ```
 The Neural Network function is actually finding the location of the input image if it is a car. 
-* Convert the output into heatmap
+* Convert the output into heatmap, cell 43
 ```
 def locate(img, windows = None):
     
@@ -374,6 +376,7 @@ def locate(img, windows = None):
                     location.append(([i*8,j*8],[i*8+64, j*8+64]))
     return map_zero, location
 ```
+* Test run, cell 46
 <p align="center">
  <img src="./output_images/car_detection_heatmap.png" width="720">
 </p>
@@ -384,13 +387,14 @@ I also implemented a detection window within search windows search. If the cente
 ####1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
 I decided to search random window positions at certain scales over certain areas. I used the basic function in Udacity lesson
-as base
+as base (cell 16)
 ```
 def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], 
                     xy_window=(64, 64), xy_overlap=(0.5, 0.5)):
 ```
 added new function to call the slide_window(). I set three regions, far, middle, and near. By dauft, get 10 64x64 windows in far region(x> 600 pix, y in between 380 to 500 pix), get another 5 128x80 windows in middle region (x > 450 pix, y in between 400 to 550 pix). Also the near field, get 3 250x160 windows, area x > 300 pix, y in between 420 to 700 pix. Middle region and far region will overlop from the y in between 400 to 500 pix area. Middle region and near region will overlap from the y in between 420 to 550 pix. 
 All scan boxes will randomly appeared in their region, and returned as a list of different scaled boxes location coordinates. 
+Cell 17:
 ```
 def random_scan_boxes(image, far = 10, mid = 5, near = 3):
     #Create a list to append scan window coordinates
@@ -418,7 +422,7 @@ def random_scan_boxes(image, far = 10, mid = 5, near = 3):
         
     return scan_windows
 ```
-The scan boxes can be used to build car finder pipeline as showing. It dependent on you needs to choose how many boxes for each region. More boxes, the random distribution is more even, but take longer to calculated. Less boxes, the detection output is flicking, I solved this problem in the following section. 
+The scan boxes can be used to build car finder pipeline as showing. It dependent on you needs to choose how many boxes for each region. More boxes, the random distribution is more even, but take longer to calculated. Less boxes, the detection output is flicking, I solved this problem in the following section. Cell 17:
 ```
 def car_finder_pipeline(img):
     t=time.time()
@@ -434,7 +438,8 @@ def car_finder_pipeline(img):
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
-Ultimately I searched on three scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result.  There are some example images:
+Ultimately I searched on three scales using YCrCb 3-channel HOG features plus spatially binned color and histograms of color in the feature vector, which provided a nice result. In cell 18, build a function to extract all features from single image input.
+And cell 19 is the test result. 
 * Crop out the car
 <p align="center">
  <img src="./output_images/automatic_cropped_car_finder.png" width="720">
@@ -456,7 +461,7 @@ Here's a [link to my video result](./project_video_out35.mp4)
 
 
 ####2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
-
+Cell 47 is the final process pipeline, cell 48 is the video productor. 
 I recorded the positions of positive detections in each frame of the video, globalize the positions and shared with other functions. 
 ```
 global location, find_car_boxes, labeled_bboxes
@@ -530,7 +535,7 @@ Wall time: 2min 22s
 
 Compare to the Single Shot MultiBox Detector(SSD) method and You only look once (YOLO) method, both of them are claimed fast method at 20+ fps, they are working on 512x512 or 448x448 input images, my method is working on 1280x720 input images. If implement on GPU, it could be much faster. 
 
-My bounding box size is based on Udacity lesson method: finding the maxium area of the heatmap. More overlapped window, tighter the box fit. Less overlapped window, yield loss fit box. 
+Cell 20, my bounding box size is based on Udacity lesson method: finding the maxium area of the heatmap. More overlapped window, tighter the box fit. Less overlapped window, yield loss fit box. 
 ```
 # Iterate through all detected cars
     for car_number in range(1, labels[1]+1):
