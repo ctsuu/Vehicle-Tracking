@@ -570,7 +570,7 @@ In this project, I also tried to track the car 1 and car 2, but when one car in 
 There are many areas can be improved. Use existing built functions can be a big performance improvement, it may utilize the resource better, and save lot of time to build your own function. 
 
 ### Credit to 
-*Udacity Self Driving Car Course Material
-*Slack Channels
-*https://github.com/HTuennermann/Vehicle-Detection-and-Tracking/blob/master/LocalizationModel.ipynb
-*https://github.com/matthewzimmer/CarND-Vehicle-Detection-P5/blob/master/final-project.ipynb
+* Udacity Self Driving Car Course Material
+* Slack Channels
+* https://github.com/HTuennermann/Vehicle-Detection-and-Tracking/blob/master/LocalizationModel.ipynb
+* https://github.com/matthewzimmer/CarND-Vehicle-Detection-P5/blob/master/final-project.ipynb
