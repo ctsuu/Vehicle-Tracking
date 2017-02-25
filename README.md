@@ -161,16 +161,16 @@ file_features.append(hog_features)
 
 features.append(np.concatenate(file_features))
 ```
-This time, it take 3 times longer to extract features and training, but it take same time to predicts a label, and accuracy reached 99.03%, I am happy with this result.    
+This time, it take 3 times longer to extract features and training, but it take same time to predicts a label, and accuracy reached 99.4%, I am happy with this result.    
 ```
-124.46 Seconds to extract HOG features...
+130.45 Seconds to extract HOG features...
 Using: 8 orientations 7 pixels per cell and 2 cells per block
 Feature vector length: 9312
-38.12 Seconds to train SVC...
-Test Accuracy of SVC =  0.9903
-My SVC predicts:  [ 1.  0.  1.  0.  0.  0.  0.  0.  1.  0.]
-For these 10 labels:  [ 1.  0.  1.  0.  0.  0.  0.  0.  1.  0.]
-0.004 Seconds to predict 10 labels with SVC
+6.34 Seconds to train SVC...
+Test Accuracy of SVC =  0.994
+My SVC predicts:  [ 0.  1.  0.  1.  0.  0.  0.  1.  0.  0.]
+For these 10 labels:  [ 0.  1.  0.  1.  0.  0.  0.  1.  0.  0.]
+0.00243 Seconds to predict 10 labels with SVC
 ```
 
 ####2. Explain how you settled on your final choice of HOG parameters.
@@ -183,9 +183,9 @@ I tried various combinations of parameters and here is a table shows the using t
 | 1   | RGB | 9 | 8 | 2 | 0   | 97.50% |
 | 2   | YUV | 9 | 8 | 2 | 0   | 98.00%   |
 | 3   | YUV | 8 | 7 | 2 | All | 99.00%  |
-| 4   | YCrCb | 8 | 7 | 2 | All | 99.03% |
+| 4   | YCrCb | 8 | 7 | 2 | All | 99.40% |
 
-I choose the option 4 use 'YCrCb' color histogram, and `orientations=8`, `pixels_per_cell=(7, 7)` and `cells_per_block=(2, 2)` and 'All' hog channels simply because it yields highest accuracies 99.03%, which is much higher than simple Nerual Network can achive. 
+I choose the option 4 use 'YCrCb' color histogram, and `orientations=8`, `pixels_per_cell=(7, 7)` and `cells_per_block=(2, 2)` and 'All' hog channels simply because it yields highest accuracies 99.4%, which is higher than simple Nerual Network can achive. 
 
 ####3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
@@ -270,8 +270,40 @@ print('Test Accuracy of SVC = ', round(svc.score(X_test, y_test), 4))
 t=time.time()
 ```
 I also built and trained a simple Nerual Network in Keras: Credit to https://github.com/HTuennermann/Vehicle-Detection-and-Tracking/blob/master/LocalizationModel.ipynb.
-The data preparation is same as above. 
-* Start with a Nerual Network model
+* Data preparation
+```
+# Read in car and notcar images again
+cars = glob.glob('./vehicles/*/*.png')
+notcars = glob.glob('./non-vehicles/*/*.png')
+```
+```
+# Generate Y Vector
+Ynn = np.concatenate([np.ones(len(cars)), np.zeros(len(notcars))-1])
+
+# Read X Vector
+Xnn = []
+for fname in cars:    
+    Xnn.append(scipy.misc.imread(fname))
+for fname in notcars:    
+    Xnn.append(scipy.misc.imread(fname))
+Xnn = np.array(Xnn)
+```
+Notice `scipy.misc.imread()`will works with next training, but mpimg.imread() will not work with next training.  
+* 90/10 split the training set and test set
+```
+Xnn_train, Xnn_test, Ynn_train, Ynn_test = train_test_split(Xnn, Ynn, test_size=0.10, random_state=42)
+
+Xnn_train = Xnn_train.astype('float32')
+Xnn_test = Xnn_test.astype('float32')
+print('Xnn_train shape:', Xnn_train.shape)
+print(Xnn_train.shape[0], 'train samples')
+print(Xnn_test.shape[0], 'test samples')
+input_shape =  (3,64,64)
+Xnn_train shape: (15984, 64, 64, 3)
+15984 train samples
+1776 test samples
+```
+* Nerual Network model
 ```
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten,Lambda
@@ -308,12 +340,10 @@ model.save_weights("localize.h5")
 ```
 * Check the test accuracy
 ```
-Epoch 19/20
-15984/15984 [==============================] - 58s - loss: 0.0271 - acc: 0.9810 - val_loss: 0.0198 - val_acc: 0.9870
 Epoch 20/20
-15984/15984 [==============================] - 58s - loss: 0.0252 - acc: 0.9827 - val_loss: 0.0213 - val_acc: 0.9859
-Test score: 0.0212628707615
-Test accuracy: 0.985923423423
+15984/15984 [=======================] - 59s - loss: 0.0330 - acc: 0.9790 - val_loss: 0.0208 - val_acc: 0.9893
+Test score: 0.020839428846
+Test accuracy: 0.989301801802
 ```
 * Prediction Model
 ```
@@ -484,7 +514,19 @@ Before the program find any vehicle, the program need fully open the eye, search
 This is the most cost expensive stage, my program will run at 2 fps until it found at lease one vehicle. Therefore, randomly select windows can't help much. But planned narrow search region can help. 
 
 Keep tracking a vehicle is much easier. With high accurcy SVC classifier, we can check is this a vehicle, yes, mark the car, very fast; no, do a full search. For the current setting and provided dataset, it seems work well. The car is running within the bounding box, if it come out too much, search and track again. This approach also give the search function a break. 
-The frame rate can jump up from 2 fps to 15-30+ fps depends on the overhead and preprocessing. 
+The frame rate can jump up from 2 fps to 15-30+ fps depends on the overhead and preprocessing. The average frame rate is 8 fps for this project video.
+```
+[MoviePy] >>>> Building video ./project_video_out36.mp4
+[MoviePy] Writing video ./project_video_out36.mp4
+
+100%|█████████▉| 1260/1261 [02:22<00:00,  7.57it/s]
+
+[MoviePy] Done.
+[MoviePy] >>>> Video ready: ./project_video_out36.mp4 
+
+CPU times: user 11min 52s, sys: 1min 32s, total: 13min 24s
+Wall time: 2min 22s
+```
 
 Compare to the Single Shot MultiBox Detector(SSD) method and You only look once (YOLO) method, both of them are claimed fast method at 20+ fps, they are working on 512x512 or 448x448 input images, my method is working on 1280x720 input images. If implement on GPU, it could be much faster. 
 
